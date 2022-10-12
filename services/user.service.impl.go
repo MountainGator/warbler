@@ -40,10 +40,10 @@ func NewWarbleService(warblecollection *mongo.Collection, ctx context.Context) W
 }
 
 func (u *UserServiceImpl) CreateUser(user *models.User, c *gin.Context) error {
-
+	return nil
 }
 func (u *UserServiceImpl) UserLogin(name *string, pwd string, c *gin.Context) error {
-
+	return nil
 }
 func (u *UserServiceImpl) GetUserDetails(*string) (*models.User, error) {
 	var user *models.User
@@ -59,17 +59,17 @@ func (u *UserServiceImpl) DeleteUser(*string) error {
 	return nil
 }
 
-func (u *WarbleServiceImpl) CreateWarble(warble *models.Warble) error {
+func (w *WarbleServiceImpl) CreateWarble(warble *models.Warble) error {
 	return nil
 }
-func (u *WarbleServiceImpl) EditWarble(warble *models.Warble) error {
+func (w *WarbleServiceImpl) EditWarble(warble *models.Warble) error {
 	return nil
 }
-func (u *WarbleServiceImpl) FindAll() ([]*models.Warble, error) {
+func (w *WarbleServiceImpl) FindAll() ([]*models.Warble, error) {
 	var warble_list []*models.Warble
 	return warble_list, nil
 }
-func (u *WarbleServiceImpl) FindUserWarbles(user_id *string) ([]*models.Warble, error) {
+func (w *WarbleServiceImpl) FindUserWarbles(user_id *string) ([]*models.Warble, error) {
 	var warble_list []*models.Warble
 	return warble_list, nil
 }
