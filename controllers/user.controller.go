@@ -35,7 +35,7 @@ func (uc *UserController) Auth(c *gin.Context) {
 }
 
 func (uc *UserController) CreateUser(c *gin.Context) {
-
+	c.JSON(http.StatusAccepted, gin.H{"success": "user created"})
 }
 func (uc *UserController) UserLogin(c *gin.Context) {
 

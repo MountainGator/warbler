@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 
 	"github.com/MountainGator/warbler/controllers"
 	"github.com/MountainGator/warbler/services"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/sessions"
-	"github.com/rs/cors"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -27,9 +29,11 @@ var (
 )
 
 func init() {
-	// if err = godotenv.Load(); err != nil {
-	// 	log.Println("No .env file found")
-	// }
+	if err = godotenv.Load(); err != nil {
+		log.Println("No .env file found")
+	}
+
+	key = []byte(os.Getenv("SECRET_KEY"))
 
 	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -41,14 +45,13 @@ func init() {
 		log.Fatal("error pinging mongo", err)
 	}
 
-	key = []byte("super-secret-key")
 	store = sessions.NewCookieStore(key)
 
 	store.Options.HttpOnly = false
 	store.Options.Secure = false
 
-	user_coll = client.Database("playlist_db").Collection("users")
-	warble_coll = client.Database("playlist_db").Collection("warbles")
+	user_coll = client.Database("warble_db").Collection("users")
+	warble_coll = client.Database("warble_db").Collection("warbles")
 	us = services.NewUserService(user_coll, store, context.TODO())
 	ws = services.NewWarbleService(warble_coll, context.TODO())
 	uc = controllers.NewUserController(us, ws, store)
@@ -73,6 +76,9 @@ func main() {
 	user_router.GET("/all-warbles", uc.FindUserWarbles)
 	user_router.DELETE("/delete-warble", uc.DeleteWarble)
 
-	r.Use(cors.Default())
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{"http://localhost:4200", "http://localhost:3000"}
+
+	r.Use(cors.New(config))
 	r.Run()
 }
