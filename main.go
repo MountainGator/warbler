@@ -64,6 +64,7 @@ func main() {
 	r.POST("/login", uc.UserLogin)
 	r.POST("/new-user", uc.CreateUser)
 	r.GET("/all-warbles", uc.FindAll)
+	r.GET("/check", uc.GetCreds)
 
 	user_router.GET("/logout", uc.Logout)
 	user_router.GET("/user-id", uc.GetUserDetails)

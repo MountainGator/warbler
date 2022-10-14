@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/MountainGator/warbler/services"
@@ -32,6 +33,18 @@ func (uc *UserController) Auth(c *gin.Context) {
 		return
 	}
 	c.Next()
+}
+
+func (uc *UserController) GetCreds(c *gin.Context) {
+	session, _ := uc.store.Get(c.Request, "session")
+	_, ok := session.Values["user"]
+
+	if !ok {
+		c.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "Not logged in"})
+		return
+	}
+	fmt.Println("session user", ok)
+	c.JSON(http.StatusAccepted, gin.H{"user": ok})
 }
 
 func (uc *UserController) CreateUser(c *gin.Context) {
