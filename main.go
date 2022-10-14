@@ -67,9 +67,9 @@ func main() {
 	r.GET("/check", uc.GetCreds)
 
 	user_router.GET("/logout", uc.Logout)
-	user_router.GET("/user-id", uc.GetUserDetails)
+	user_router.GET("/details/:name", uc.GetUserDetails)
 	user_router.PATCH("/update", uc.UpdateUser)
-	user_router.DELETE("/delete", uc.DeleteUser)
+	user_router.DELETE("/delete/:name", uc.DeleteUser)
 
 	user_router.POST("/new-warble", uc.CreateWarble)
 

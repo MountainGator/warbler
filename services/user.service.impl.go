@@ -64,17 +64,17 @@ func (u *UserServiceImpl) CreateUser(user *models.User, c *gin.Context) error {
 	}
 	return nil
 }
-func (u *UserServiceImpl) UserLogin(name *string, pwd string, c *gin.Context) error {
+func (u *UserServiceImpl) UserLogin(data *models.Login, c *gin.Context) error {
 	var (
 		user *models.User
 		err  error
 	)
-	query := bson.D{bson.E{Key: "username", Value: name}}
+	query := bson.D{bson.E{Key: "username", Value: data.Username}}
 	if err = u.usercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
 		return err
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(pwd))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(data.Pwd))
 
 	if err != nil {
 		return err
@@ -85,11 +85,11 @@ func (u *UserServiceImpl) UserLogin(name *string, pwd string, c *gin.Context) er
 		return ses_err
 	}
 
-	session.Values["user"] = name
+	session.Values["user"] = user.Username
 	session.Save(c.Request, c.Writer)
 	return nil
 }
-func (u *UserServiceImpl) GetUserDetails(*string) (*models.User, error) {
+func (u *UserServiceImpl) GetUserDetails(name *string) (*models.User, error) {
 	var user *models.User
 	filter := bson.D{primitive.E{Key: "username", Value: user.Username}}
 	if err := u.usercollection.FindOne(u.ctx, filter).Decode(&user); err != nil {
@@ -107,10 +107,34 @@ func (u *UserServiceImpl) Logout(c *gin.Context) error {
 	return nil
 }
 
-func (u *UserServiceImpl) UpdateUser(*models.User) error {
+func (u *UserServiceImpl) UpdateUser(user *models.User) error {
+	filter := bson.D{primitive.E{Key: "_id", Value: user.Id}}
+	update := bson.D{
+		primitive.E{
+			Key: "$set",
+			Value: bson.D{
+				primitive.E{Key: "username", Value: user.Username},
+			},
+		},
+		primitive.E{
+			Key: "$set",
+			Value: bson.D{
+				primitive.E{Key: "email", Value: user.Email},
+			},
+		},
+	}
+	result, _ := u.usercollection.UpdateOne(u.ctx, filter, update)
+	if result.MatchedCount != 1 {
+		return errors.New("couldn't find user")
+	}
 	return nil
 }
-func (u *UserServiceImpl) DeleteUser(*string) error {
+func (u *UserServiceImpl) DeleteUser(name *string) error {
+	filter := bson.D{primitive.E{Key: "name", Value: name}}
+	result, _ := u.usercollection.DeleteOne(u.ctx, filter)
+	if result.DeletedCount != 1 {
+		return errors.New("error. could not delete user")
+	}
 	return nil
 }
 
