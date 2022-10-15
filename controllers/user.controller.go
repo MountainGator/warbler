@@ -25,10 +25,12 @@ func NewUserController(userservice services.UserService, warbleservice services.
 }
 
 func (uc *UserController) Auth(c *gin.Context) {
+	fmt.Println("running auth")
 	session, _ := uc.store.Get(c.Request, "session")
-	_, ok := session.Values["user"]
+	user, ok := session.Values["user"]
 
-	if !ok {
+	if !ok || user == nil {
+		fmt.Println("error getting session value")
 		c.JSON(http.StatusForbidden, gin.H{"Error": "Not logged in"})
 		c.Abort()
 		return
@@ -44,25 +46,32 @@ func (uc *UserController) GetCreds(c *gin.Context) {
 		c.JSON(http.StatusNetworkAuthenticationRequired, gin.H{"error": "Not logged in"})
 		return
 	}
-	fmt.Println("session user", ok)
 	c.JSON(http.StatusAccepted, gin.H{"user": ok})
 }
 
 func (uc *UserController) CreateUser(c *gin.Context) {
-	var user *models.User
+	var user models.User
+	var err error
+	if err = c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "can't bind JSON"})
+		return
+	}
 
-	c.BindJSON(&user)
-	if err := uc.UserService.CreateUser(user, c); err != nil {
+	if err = uc.UserService.CreateUser(&user, c); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "user already exists"})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"success": "user created"})
 }
 func (uc *UserController) UserLogin(c *gin.Context) {
-	var login_data *models.Login
+	var login_data models.Login
+	var err error
 
-	c.Bind(&login_data)
-	if err := uc.UserService.UserLogin(login_data, c); err != nil {
+	if err = c.ShouldBindJSON(&login_data); err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": "couldn't bind json"})
+		return
+	}
+	if err = uc.UserService.UserLogin(&login_data, c); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "incorrect username or password"})
 		return
 	}
@@ -74,13 +83,14 @@ func (uc *UserController) GetUserDetails(c *gin.Context) {
 		err  error
 	)
 	username := c.Param("name")
-
 	user, err = uc.UserService.GetUserDetails(&username)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		fmt.Println("error finding user (controller)", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user not found"})
 		return
 	}
+	user.Pwd = ""
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
@@ -97,9 +107,10 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		err  error
 	)
 
-	c.BindJSON(&user)
+	err = c.ShouldBindJSON(&user)
 
 	if err = uc.UserService.UpdateUser(user); err != nil {
+		fmt.Println("error updating user", err)
 		c.JSON(http.StatusConflict, gin.H{"error": err})
 		return
 	}

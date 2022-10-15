@@ -15,6 +15,6 @@ type Warble struct {
 }
 
 type Login struct {
-	Username string `form:"username" bson:"username"`
-	Pwd      string `form:"password" bson:"password"`
+	Username string `json:"username" bson:"username"`
+	Pwd      string `json:"password" bson:"password"`
 }

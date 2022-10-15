@@ -59,6 +59,7 @@ func init() {
 
 func main() {
 	r := gin.Default()
+	r.SetTrustedProxies([]string{"192.168.1.86"})
 	user_router := r.Group("/user", uc.Auth)
 
 	r.POST("/login", uc.UserLogin)
@@ -78,7 +79,7 @@ func main() {
 	user_router.DELETE("/delete-warble", uc.DeleteWarble)
 
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:4200", "http://localhost:3000"}
+	config.AllowOrigins = []string{"http://127.0.0.1:3000", "http://localhost:3000", "https://www.thunderclient.com"}
 
 	r.Use(cors.New(config))
 	r.Run()

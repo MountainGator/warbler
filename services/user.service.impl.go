@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/MountainGator/warbler/models"
 	"github.com/gin-gonic/gin"
@@ -48,20 +49,28 @@ func (u *UserServiceImpl) CreateUser(user *models.User, c *gin.Context) error {
 	err = u.usercollection.FindOne(u.ctx, query).Decode(&temp)
 
 	if err != nil {
-		_, er := u.usercollection.InsertOne(u.ctx, user)
-		session, ses_err := u.store.Get(c.Request, "session")
-		if ses_err != nil {
-			return ses_err
+		n00b, berr := bcrypt.GenerateFromPassword([]byte(user.Pwd), 14)
+		if berr != nil {
+			fmt.Println("error hashing pwd", berr)
+			return berr
 		}
-		session.Values["user"] = temp.Username
-		session.Save(c.Request, c.Writer)
+		user.Pwd = string(n00b)
+		_, er := u.usercollection.InsertOne(u.ctx, user)
 		if er != nil {
+			fmt.Println("insertion err", er)
 			return er
 		}
-
-	} else if temp.Username == user.Username {
+		session, ses_err := u.store.Get(c.Request, "session")
+		if ses_err != nil {
+			fmt.Println("session err", ses_err)
+			return ses_err
+		}
+		session.Values["user"] = user.Username
+		session.Save(c.Request, c.Writer)
+	} else {
 		return errors.New("user already exists")
 	}
+
 	return nil
 }
 func (u *UserServiceImpl) UserLogin(data *models.Login, c *gin.Context) error {
@@ -71,17 +80,21 @@ func (u *UserServiceImpl) UserLogin(data *models.Login, c *gin.Context) error {
 	)
 	query := bson.D{bson.E{Key: "username", Value: data.Username}}
 	if err = u.usercollection.FindOne(u.ctx, query).Decode(&user); err != nil {
+		fmt.Println("find user error", err)
 		return err
 	}
-
+	fmt.Println("found user data", user)
 	err = bcrypt.CompareHashAndPassword([]byte(user.Pwd), []byte(data.Pwd))
 
 	if err != nil {
+		fmt.Println("hash pwd error", err)
+
 		return err
 	}
 
 	session, ses_err := u.store.Get(c.Request, "session")
 	if ses_err != nil {
+		fmt.Println("store session error")
 		return ses_err
 	}
 
@@ -91,8 +104,9 @@ func (u *UserServiceImpl) UserLogin(data *models.Login, c *gin.Context) error {
 }
 func (u *UserServiceImpl) GetUserDetails(name *string) (*models.User, error) {
 	var user *models.User
-	filter := bson.D{primitive.E{Key: "username", Value: user.Username}}
+	filter := bson.D{primitive.E{Key: "username", Value: name}}
 	if err := u.usercollection.FindOne(u.ctx, filter).Decode(&user); err != nil {
+		fmt.Println("error finding user", err)
 		return nil, err
 	}
 	return user, nil
