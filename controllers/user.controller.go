@@ -107,7 +107,10 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		err  error
 	)
 
-	err = c.ShouldBindJSON(&user)
+	if err = c.ShouldBindJSON(&user); err != nil {
+		fmt.Println("error binding json", err)
+		c.JSON(http.StatusConflict, gin.H{"error": "error in request json"})
+	}
 
 	if err = uc.UserService.UpdateUser(user); err != nil {
 		fmt.Println("error updating user", err)
