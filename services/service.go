@@ -19,4 +19,5 @@ type WarbleService interface {
 	EditWarble(*models.Warble) error
 	FindAll() ([]*models.Warble, error)
 	FindUserWarbles(*string) ([]*models.Warble, error)
+	DeleteWarble(*string) error
 }

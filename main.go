@@ -75,8 +75,9 @@ func main() {
 	user_router.POST("/new-warble", uc.CreateWarble)
 
 	user_router.PATCH("/edit-warble", uc.EditWarble)
-	user_router.GET("/all-warbles", uc.FindUserWarbles)
-	user_router.DELETE("/delete-warble", uc.DeleteWarble)
+	user_router.GET("/all-warbles", uc.FindAll)
+	user_router.GET("/all-warbles/:name", uc.FindUserWarbles)
+	user_router.DELETE("/delete-warble/:id", uc.DeleteWarble)
 
 	config := cors.DefaultConfig()
 	config.AllowOrigins = []string{"http://127.0.0.1:3000", "http://localhost:3000", "https://www.thunderclient.com"}

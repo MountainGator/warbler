@@ -131,17 +131,72 @@ func (uc *UserController) DeleteUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": "deleted user"})
 }
 func (uc *UserController) CreateWarble(c *gin.Context) {
+	var (
+		new_warble *models.Warble
+		err        error
+	)
 
+	if err = c.ShouldBindJSON(new_warble); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
+		return
+	}
+
+	if err = uc.WarbleService.CreateWarble(new_warble); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Success": "warble created"})
 }
 func (uc *UserController) EditWarble(c *gin.Context) {
+	var (
+		new_warble *models.Warble
+		err        error
+	)
+
+	if err = c.ShouldBindJSON(new_warble); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": err})
+		return
+	}
+
+	if err = uc.WarbleService.EditWarble(new_warble); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Success": "warble modified"})
 
 }
 func (uc *UserController) FindAll(c *gin.Context) {
 
+	warble_list, err := uc.WarbleService.FindAll()
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Success": warble_list})
 }
 func (uc *UserController) FindUserWarbles(c *gin.Context) {
+	user_name := c.Param("name")
 
+	warble_list, err := uc.WarbleService.FindUserWarbles(&user_name)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Success": warble_list})
 }
-func (uc *UserController) DeleteWarble(c *gin.Context) {
 
+func (uc *UserController) DeleteWarble(c *gin.Context) {
+	user_id := c.Param("id")
+	if err := uc.WarbleService.DeleteWarble(&user_id); err != nil {
+		c.JSON(http.StatusConflict, gin.H{"Error": err})
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{"Success": "Deleted Warble"})
 }
