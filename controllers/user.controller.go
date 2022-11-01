@@ -10,23 +10,23 @@ import (
 	"github.com/gorilla/sessions"
 )
 
-type UserController struct {
+type Controller struct {
 	UserService   services.UserService
 	WarbleService services.WarbleService
 	store         *sessions.CookieStore
 }
 
-func NewUserController(userservice services.UserService, warbleservice services.WarbleService, store *sessions.CookieStore) UserController {
-	return UserController{
+func NewController(userservice services.UserService, warbleservice services.WarbleService, store *sessions.CookieStore) Controller {
+	return Controller{
 		UserService:   userservice,
 		WarbleService: warbleservice,
 		store:         store,
 	}
 }
 
-func (uc *UserController) Auth(c *gin.Context) {
+func (cont *Controller) Auth(c *gin.Context) {
 	fmt.Println("running auth")
-	session, _ := uc.store.Get(c.Request, "session")
+	session, _ := cont.store.Get(c.Request, "session")
 	user, ok := session.Values["user"]
 
 	if !ok || user == nil {
@@ -38,8 +38,8 @@ func (uc *UserController) Auth(c *gin.Context) {
 	c.Next()
 }
 
-func (uc *UserController) GetCreds(c *gin.Context) {
-	session, _ := uc.store.Get(c.Request, "session")
+func (cont *Controller) GetCreds(c *gin.Context) {
+	session, _ := cont.store.Get(c.Request, "session")
 	_, ok := session.Values["user"]
 
 	if !ok {
@@ -49,7 +49,7 @@ func (uc *UserController) GetCreds(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"user": ok})
 }
 
-func (uc *UserController) CreateUser(c *gin.Context) {
+func (cont *Controller) CreateUser(c *gin.Context) {
 	var user models.User
 	var err error
 	if err = c.ShouldBindJSON(&user); err != nil {
@@ -57,13 +57,13 @@ func (uc *UserController) CreateUser(c *gin.Context) {
 		return
 	}
 
-	if err = uc.UserService.CreateUser(&user, c); err != nil {
+	if err = cont.UserService.CreateUser(&user, c); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "user already exists"})
 		return
 	}
 	c.JSON(http.StatusCreated, gin.H{"success": "user created"})
 }
-func (uc *UserController) UserLogin(c *gin.Context) {
+func (cont *Controller) UserLogin(c *gin.Context) {
 	var login_data models.Login
 	var err error
 
@@ -71,19 +71,19 @@ func (uc *UserController) UserLogin(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "couldn't bind json"})
 		return
 	}
-	if err = uc.UserService.UserLogin(&login_data, c); err != nil {
+	if err = cont.UserService.UserLogin(&login_data, c); err != nil {
 		c.JSON(http.StatusForbidden, gin.H{"error": "incorrect username or password"})
 		return
 	}
 	c.JSON(http.StatusAccepted, gin.H{"success": "logged in"})
 }
-func (uc *UserController) GetUserDetails(c *gin.Context) {
+func (cont *Controller) GetUserDetails(c *gin.Context) {
 	var (
 		user *models.User
 		err  error
 	)
 	username := c.Param("name")
-	user, err = uc.UserService.GetUserDetails(&username)
+	user, err = cont.UserService.GetUserDetails(&username)
 
 	if err != nil {
 		fmt.Println("error finding user (controller)", err)
@@ -94,14 +94,14 @@ func (uc *UserController) GetUserDetails(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": user})
 
 }
-func (uc *UserController) Logout(c *gin.Context) {
-	if err := uc.UserService.Logout(c); err != nil {
+func (cont *Controller) Logout(c *gin.Context) {
+	if err := cont.UserService.Logout(c); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error logging out": err})
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{"success": "logged out"})
 }
-func (uc *UserController) UpdateUser(c *gin.Context) {
+func (cont *Controller) UpdateUser(c *gin.Context) {
 	var (
 		user *models.User
 		err  error
@@ -112,7 +112,7 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 		c.JSON(http.StatusConflict, gin.H{"error": "error in request json"})
 	}
 
-	if err = uc.UserService.UpdateUser(user); err != nil {
+	if err = cont.UserService.UpdateUser(user); err != nil {
 		fmt.Println("error updating user", err)
 		c.JSON(http.StatusConflict, gin.H{"error": err})
 		return
@@ -120,17 +120,17 @@ func (uc *UserController) UpdateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"success": "updated user"})
 }
-func (uc *UserController) DeleteUser(c *gin.Context) {
+func (cont *Controller) DeleteUser(c *gin.Context) {
 
 	username := c.Param("name")
 
-	if err := uc.UserService.DeleteUser(&username); err != nil {
+	if err := cont.UserService.DeleteUser(&username); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": err})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"success": "deleted user"})
 }
-func (uc *UserController) CreateWarble(c *gin.Context) {
+func (cont *Controller) CreateWarble(c *gin.Context) {
 	var (
 		new_warble *models.Warble
 		err        error
@@ -141,14 +141,14 @@ func (uc *UserController) CreateWarble(c *gin.Context) {
 		return
 	}
 
-	if err = uc.WarbleService.CreateWarble(new_warble); err != nil {
+	if err = cont.WarbleService.CreateWarble(new_warble); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
 		return
 	}
 
 	c.JSON(http.StatusAccepted, gin.H{"Success": "warble created"})
 }
-func (uc *UserController) EditWarble(c *gin.Context) {
+func (cont *Controller) EditWarble(c *gin.Context) {
 	var (
 		new_warble *models.Warble
 		err        error
@@ -159,7 +159,7 @@ func (uc *UserController) EditWarble(c *gin.Context) {
 		return
 	}
 
-	if err = uc.WarbleService.EditWarble(new_warble); err != nil {
+	if err = cont.WarbleService.EditWarble(new_warble); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
 		return
 	}
@@ -167,9 +167,9 @@ func (uc *UserController) EditWarble(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"Success": "warble modified"})
 
 }
-func (uc *UserController) FindAll(c *gin.Context) {
+func (cont *Controller) FindAll(c *gin.Context) {
 
-	warble_list, err := uc.WarbleService.FindAll()
+	warble_list, err := cont.WarbleService.FindAll()
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
@@ -178,10 +178,10 @@ func (uc *UserController) FindAll(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, gin.H{"Success": warble_list})
 }
-func (uc *UserController) FindUserWarbles(c *gin.Context) {
+func (cont *Controller) FindUserWarbles(c *gin.Context) {
 	user_name := c.Param("name")
 
-	warble_list, err := uc.WarbleService.FindUserWarbles(&user_name)
+	warble_list, err := cont.WarbleService.FindUserWarbles(&user_name)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": err})
@@ -191,9 +191,9 @@ func (uc *UserController) FindUserWarbles(c *gin.Context) {
 	c.JSON(http.StatusAccepted, gin.H{"Success": warble_list})
 }
 
-func (uc *UserController) DeleteWarble(c *gin.Context) {
+func (cont *Controller) DeleteWarble(c *gin.Context) {
 	user_id := c.Param("id")
-	if err := uc.WarbleService.DeleteWarble(&user_id); err != nil {
+	if err := cont.WarbleService.DeleteWarble(&user_id); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"Error": err})
 		return
 	}

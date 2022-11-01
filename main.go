@@ -19,7 +19,7 @@ import (
 var (
 	us          services.UserService
 	ws          services.WarbleService
-	uc          controllers.UserController
+	uc          controllers.Controller
 	user_coll   *mongo.Collection
 	warble_coll *mongo.Collection
 	client      *mongo.Client
@@ -54,7 +54,7 @@ func init() {
 	warble_coll = client.Database("warble_db").Collection("warbles")
 	us = services.NewUserService(user_coll, store, context.TODO())
 	ws = services.NewWarbleService(warble_coll, context.TODO())
-	uc = controllers.NewUserController(us, ws, store)
+	uc = controllers.NewController(us, ws, store)
 }
 
 func main() {
