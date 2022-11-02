@@ -52,7 +52,6 @@ func (w *WarbleServiceImpl) EditWarble(warble *models.Warble) error {
 }
 func (w *WarbleServiceImpl) FindAll() ([]*models.Warble, error) {
 	var (
-		results     []bson.D
 		warble_list []*models.Warble
 		cursor      *mongo.Cursor
 		err         error
@@ -64,11 +63,58 @@ func (w *WarbleServiceImpl) FindAll() ([]*models.Warble, error) {
 		return nil, err
 	}
 
-	if err = cursor.All(w.ctx, &results); err != nil {
+	warble_list, err = cursor_to_slice(cursor, w.ctx)
+
+	if err != nil {
+		fmt.Println("convert cursor to slice error")
 		return nil, err
 	}
 
-	if err = cursor.Close(w.ctx); err != nil {
+	return warble_list, nil
+}
+func (w *WarbleServiceImpl) FindUserWarbles(user_id *string) ([]*models.Warble, error) {
+	var (
+		warble_list []*models.Warble
+		cursor      *mongo.Cursor
+		err         error
+	)
+	filter := bson.D{primitive.E{Key: "user_id", Value: user_id}}
+	cursor, err = w.warblecollection.Find(w.ctx, filter)
+	if err != nil {
+		fmt.Println("find warble impl error")
+		return nil, err
+	}
+
+	warble_list, err = cursor_to_slice(cursor, w.ctx)
+
+	if err != nil {
+		fmt.Println("convert cursor to slice error")
+		return nil, err
+	}
+
+	return warble_list, nil
+}
+func (w *WarbleServiceImpl) DeleteWarble(warble_id *string) error {
+	filter := bson.D{primitive.E{Key: "id", Value: warble_id}}
+	result, _ := w.warblecollection.DeleteOne(w.ctx, filter)
+	if result.DeletedCount != 1 {
+		return errors.New("error. could not delete warble")
+	}
+	return nil
+}
+
+func cursor_to_slice(cursor *mongo.Cursor, ctx context.Context) ([]*models.Warble, error) {
+	var (
+		results     []bson.D
+		warble_list []*models.Warble
+		err         error
+	)
+
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	if err = cursor.Close(ctx); err != nil {
 		return nil, err
 	}
 
@@ -80,16 +126,4 @@ func (w *WarbleServiceImpl) FindAll() ([]*models.Warble, error) {
 	}
 
 	return warble_list, nil
-}
-func (w *WarbleServiceImpl) FindUserWarbles(user_id *string) ([]*models.Warble, error) {
-	var warble_list []*models.Warble
-	return warble_list, nil
-}
-func (w *WarbleServiceImpl) DeleteWarble(warble_id *string) error {
-	filter := bson.D{primitive.E{Key: "id", Value: warble_id}}
-	result, _ := w.warblecollection.DeleteOne(w.ctx, filter)
-	if result.DeletedCount != 1 {
-		return errors.New("error. could not delete warble")
-	}
-	return nil
 }
