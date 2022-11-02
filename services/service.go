@@ -6,7 +6,7 @@ import (
 )
 
 type UserService interface {
-	CreateUser(*models.User, *gin.Context) error
+	CreateUser(*models.NewUser, *gin.Context) error
 	UserLogin(*models.Login, *gin.Context) error
 	GetUserDetails(*string) (*models.User, error)
 	Logout(*gin.Context) error

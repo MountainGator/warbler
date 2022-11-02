@@ -8,6 +8,12 @@ type User struct {
 	Warbles  []*Warble `json:"warbles" bson:"warbles"`
 }
 
+type NewUser struct {
+	Username string `json:"username" bson:"username"`
+	Pwd      string `json:"password" bson:"password"`
+	Email    string `json:"email" bson:"email"`
+}
+
 type Warble struct {
 	Id      string  `json:"id" bson:"_id"`
 	User_id *string `json:"user_id" bson:"user_id"`
@@ -17,4 +23,9 @@ type Warble struct {
 type Login struct {
 	Username string `json:"username" bson:"username"`
 	Pwd      string `json:"password" bson:"password"`
+}
+
+type ResetPassword struct {
+	TempName string `json:"username" bson:"username"`
+	TempPwd  string `json:"password" bson:"password"`
 }

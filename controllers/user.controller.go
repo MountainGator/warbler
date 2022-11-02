@@ -50,7 +50,7 @@ func (cont *Controller) GetCreds(c *gin.Context) {
 }
 
 func (cont *Controller) CreateUser(c *gin.Context) {
-	var user models.User
+	var user models.NewUser
 	var err error
 	if err = c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "can't bind JSON"})

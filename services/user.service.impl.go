@@ -7,6 +7,7 @@ import (
 
 	"github.com/MountainGator/warbler/models"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/gorilla/sessions"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,10 +29,11 @@ func NewUserService(usercollection *mongo.Collection, store *sessions.CookieStor
 	}
 }
 
-func (u *UserServiceImpl) CreateUser(user *models.User, c *gin.Context) error {
+func (u *UserServiceImpl) CreateUser(user *models.NewUser, c *gin.Context) error {
 	var (
-		temp *models.User
-		err  error
+		temp  *models.User
+		final *models.User
+		err   error
 	)
 	query := bson.D{bson.E{Key: "username", Value: user.Username}}
 	err = u.usercollection.FindOne(u.ctx, query).Decode(&temp)
@@ -43,7 +45,14 @@ func (u *UserServiceImpl) CreateUser(user *models.User, c *gin.Context) error {
 			return berr
 		}
 		user.Pwd = string(n00b)
-		_, er := u.usercollection.InsertOne(u.ctx, user)
+
+		final.Email = user.Email
+		final.Pwd = user.Pwd
+		final.Username = user.Username
+		final.Warbles = []*models.Warble{}
+		final.Id = uuid.NewString()
+
+		_, er := u.usercollection.InsertOne(u.ctx, final)
 		if er != nil {
 			fmt.Println("insertion err", er)
 			return er
