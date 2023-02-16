@@ -24,8 +24,3 @@ type Login struct {
 	Username string `json:"username" bson:"username"`
 	Pwd      string `json:"password" bson:"password"`
 }
-
-type ResetPassword struct {
-	TempName string `json:"username" bson:"username"`
-	TempPwd  string `json:"password" bson:"password"`
-}
